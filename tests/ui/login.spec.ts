@@ -7,7 +7,7 @@ test.describe('Login Page', () => {
         await loginPage.goto();
         await loginPage.login('standard_user', 'secret_sauce');
 
-        await expect(page).toHaveURL('https://www.saucedemo.com/inventory.html');
+        await expect(page).toHaveURL('/inventory.html');
     });
     test('locked_out_user credentials show error message', async ({ page }) => {
         const loginPage = new LoginPage(page);
