@@ -18,7 +18,7 @@ export class InventoryPage {
     }
 
     async addItemToCart(itemName: string) {
-        const item = this.page.locator('[data-test="inventory-item-name"]').filter({ hasText: itemName });
+        const item = this.page.locator('[data-test="inventory-item"]').filter({ hasText: itemName });
         await item.getByRole('button', { name: 'Add to cart' }).click();
     }
 
@@ -30,7 +30,7 @@ export class InventoryPage {
         return await this.itemNames.count();
     }
     
-    async gotoCard(){
+    async gotoCart(){
         await this.cartLink.click();
         await this.page.waitForURL('**/cart.html');
     }
@@ -38,6 +38,10 @@ export class InventoryPage {
     async getPrices(): Promise<number[]> {
         const texts=await this.itemPrices.allTextContents();
         return texts.map(text => parseFloat(text.replace('$', '')));
+    }
+
+    async getItemNames(): Promise<string[]> {
+        return await this.itemNames.allTextContents();
     }
 
 
