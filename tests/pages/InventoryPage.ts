@@ -32,7 +32,7 @@ export class InventoryPage {
     
     async gotoCart(){
         await this.cartLink.click();
-        await this.page.waitForURL('**/cart.html');
+        await this.page.waitForURL('/cart.html');
     }
 
     async getPrices(): Promise<number[]> {

@@ -42,7 +42,7 @@ test.describe('Cart', () => {
 
         await inventoryPage.gotoCart();
         await cartPage.continueShopping();
-        await expect(page).toHaveURL('**/inventory.html');
+        await expect(page).toHaveURL('/inventory.html');
     });
 
 

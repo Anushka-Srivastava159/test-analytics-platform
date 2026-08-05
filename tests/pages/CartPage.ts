@@ -21,12 +21,12 @@ async removeItem(itemName: string) {
 
 async checkout() {
     await this.checkoutButton.click();
-    await this.page.waitForURL('**/checkout-step-one.html');
+    await this.page.waitForURL('/checkout-step-one.html');
 }
 
 async continueShopping() {
     await this.continueShoppingButton.click();
-    await this.page.waitForURL('**/inventory.html');
+    await this.page.waitForURL('/inventory.html');
 }
 
 async getItemCount(): Promise<number> {
