@@ -32,8 +32,8 @@ export default defineConfig({
   /* Configure projects for major browsers */
   projects: [
     {name: 'api', testMatch: /api\/.*\.spec\.ts/, 
-      use:{baseURL: 'https://jsonplaceholder.typicode.com'}}
-    {name: 'chromium',  use: { ...devices['Desktop Chrome'] }},
+      use:{baseURL: 'https://jsonplaceholder.typicode.com'}},
+    {name: 'chromium', testIgnore: /api\//, use: { ...devices['Desktop Chrome'] }},
     {name: 'firefox', testIgnore: /api\//, use: { ...devices['Desktop Firefox'] }},
     {name: 'webkit', testIgnore: /api\//, use: { ...devices['Desktop Safari'] }},
   ],

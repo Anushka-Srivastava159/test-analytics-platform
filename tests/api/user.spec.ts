@@ -32,7 +32,7 @@ test.describe('Users API', ()=>{
 
         expect(users.length).toBeGreaterThan(0);
         for(const user of users){
-            expect(typeof users.id).toBe('number');
+            expect(typeof user.id).toBe('number');
             expect(typeof user.name).toBe('string');
             expect(typeof user.username).toBe('string');
             expect(user.email).toMatch(/@/);
