@@ -37,4 +37,9 @@ async getItemNames(): Promise<string[]> {
     return this.page.locator('[data-test="inventory-item-name"]').allTextContents();
 }
 
+async getItemPrices(): Promise<number[]> {
+    const priceTexts = await this.page.locator('[data-test="inventory-item-price"]').allTextContents();
+    return priceTexts.map(text => parseFloat(text.replace('$', '')));
+
+}
 }

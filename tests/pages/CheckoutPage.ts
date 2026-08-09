@@ -1,7 +1,7 @@
 import{Page, Locator} from '@playwright/test';
 
 export class CheckoutPage {
-    readonly page: Page
+    readonly page: Page;
     readonly firstNameInput: Locator;   
     readonly lastNameInput: Locator;
     readonly postalCodeInput: Locator;
@@ -11,6 +11,9 @@ export class CheckoutPage {
     readonly summaryTotal: Locator;
     readonly completeHeader: Locator;
     readonly errorMessage: Locator;
+    readonly subtotalLabel: Locator;
+    readonly taxLabel: Locator;
+    readonly cartItemsNames: Locator;
 
     constructor(page: Page) {
         this.page = page;
@@ -23,6 +26,9 @@ export class CheckoutPage {
         this.summaryTotal = page.locator('[data-test="total-label"]');
         this.completeHeader = page.locator('[data-test="complete-header"]');
         this.errorMessage = page.locator('[data-test="error"]');
+        this.subtotalLabel = page.locator('[data-test="subtotal-label"]');
+        this.taxLabel = page.locator('[data-test="tax-label"]');
+        this.cartItemsNames=page.locator('[data-test="inventory-item-name"]');
     }
 
     async fillDetails(firstName: string, lastName: string, postalCode: string) {
@@ -45,7 +51,24 @@ export class CheckoutPage {
         await this.page.waitForURL('/checkout-complete.html');
     }
 
+    async getSummary(): Promise<{subtotal: number; tax: number; total: number}> {
+        const money=(text:string|null)=>parseFloat((text ?? '').replace(/[^0-9.]/g,''));
 
+        return{
+            subtotal: money(await this.subtotalLabel.textContent()),
+            tax: money(await this.taxLabel.textContent()),
+            total: money(await this.summaryTotal.textContent()),
 
+        };
+
+    }
+
+    async continueExpectingError(){
+        await this.continueButton.click();
+    }
+
+    async getCartItemNames(): Promise<string[]> {
+        return await this.cartItemsNames.allTextContents();
+    }
 }
 

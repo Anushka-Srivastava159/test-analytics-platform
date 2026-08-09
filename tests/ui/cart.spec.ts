@@ -24,7 +24,7 @@ test.describe('Cart', () => {
         await expect(cartPage.cartItems).toHaveCount(expected.length);
     });
 
-    test('removing an item emoties cart', async({ page, loggedInPage }) => {
+    test('removing an item empties cart', async({ page, loggedInPage }) => {
         const inventoryPage = new InventoryPage(page);
         const cartPage = new CartPage(page);
 

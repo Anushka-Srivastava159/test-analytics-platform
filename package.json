@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "Playwright tests run in CI, emit structured results to a warehouse, get modelled with dbt, and surface as a test-health dashboard in Power BI and Tableau.",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Anushka-Srivastava159/test-analytics-platform.git"
@@ -18,6 +20,7 @@
   "homepage": "https://github.com/Anushka-Srivastava159/test-analytics-platform#readme",
   "devDependencies": {
     "@playwright/test": "^1.62.1",
-    "@types/node": "^26.1.2"
+    "@types/node": "^26.1.2",
+    "typescript": "^7.0.2"
   }
 }
