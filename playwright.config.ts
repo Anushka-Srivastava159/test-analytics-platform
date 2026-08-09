@@ -31,9 +31,11 @@ export default defineConfig({
     trace: 'on-first-retry', screenshot: 'only-on-failure'},
   /* Configure projects for major browsers */
   projects: [
-    {name: 'chromium', use: { ...devices['Desktop Chrome'] }},
-    {name: 'firefox', use: { ...devices['Desktop Firefox'] }},
-    {name: 'webkit', use: { ...devices['Desktop Safari'] }},
+    {name: 'api', testMatch: /api\/.*\.spec\.ts/, 
+      use:{baseURL: 'https://jsonplaceholder.typicode.com'}}
+    {name: 'chromium',  use: { ...devices['Desktop Chrome'] }},
+    {name: 'firefox', testIgnore: /api\//, use: { ...devices['Desktop Firefox'] }},
+    {name: 'webkit', testIgnore: /api\//, use: { ...devices['Desktop Safari'] }},
   ],
     /* Test against mobile viewports. */
     // {
