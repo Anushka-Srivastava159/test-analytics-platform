@@ -54,3 +54,33 @@ npx playwright test
 
 Results land in `results/results.json` — this is the pipeline's source data.
 An HTML report is also written to `playwright-report/`.
+
+UI specs run against saucedemo.com under `chromium`, `firefox` and `webkit`. API specs run
+under a separate `api` project with its own `baseURL` and no browser, so they execute once
+per run rather than once per browser — which also gives the dashboard a clean `suite`
+dimension to slice on.
+
+## Deliberate flakiness
+
+`tests/ui/flaky.spec.ts` is **intentionally unstable, and should not be "fixed."** A
+stability dashboard with nothing to plot proves nothing, so the suite generates its own
+flaky data — three tests, each failing for a different reason, so the failure modes stay
+distinguishable downstream:
+
+| test | cause |
+|---|---|
+| `checkout flow under intermittent load` | random ~20% chance, after a full real checkout |
+| `inventory renders within a tight budget` | 150ms visibility budget — a genuine render race |
+| `performance_glitch_user reaches inventory quickly` | 6s whole-test budget against an account saucedemo throttles to ~5.1s |
+
+Each test carries an inline comment marking it as intentional. Every other spec in the
+suite is expected to be deterministic; a failure outside this file is a real one.
+
+With `retries: 2` these report as **flaky** rather than **failed** — Playwright's own
+distinction between "failed then passed on retry" and "failed every attempt." That status
+is what the dbt stability model keys on, so retries must stay enabled for the data to mean
+anything. Locally `retries` is 0, so the same tests show up as plain failures:
+
+```bash
+npx playwright test tests/ui/flaky.spec.ts --retries=2
+```
