@@ -1,5 +1,7 @@
 # Test Analytics Platform
 
+[![tests](https://github.com/Anushka-Srivastava159/test-analytics-platform/actions/workflows/tests.yml/badge.svg)](https://github.com/Anushka-Srivastava159/test-analytics-platform/actions/workflows/tests.yml)
+
 Playwright tests run in CI, emit structured results to a warehouse, get modelled with dbt,
 and surface as a test-health dashboard in Power BI and Tableau.
 
@@ -59,6 +61,39 @@ UI specs run against saucedemo.com under `chromium`, `firefox` and `webkit`. API
 under a separate `api` project with its own `baseURL` and no browser, so they execute once
 per run rather than once per browser — which also gives the dashboard a clean `suite`
 dimension to slice on.
+
+## Data contract
+
+`results/results.json` is the pipeline's only input, so the fields below are load-bearing.
+Changing the reporter config or the project names changes the warehouse.
+
+| field | JSON location | consumed by |
+|---|---|---|
+| `runId`, `commit`, `branch`, `ci` | `config.metadata` | run identity — the report has none of its own |
+| `title` | each `spec` | `dim_test.test_name` |
+| suite path | each `suite.title`, nested | `dim_test.suite`, and the `ui`/`api` split |
+| `projectName` | each `test` | `dim_browser` |
+| `status`, `duration`, `retry`, `startTime` | each entry in `test.results[]` | `fct_test_run` — one entry per attempt |
+| `error.message` | failed results only | failure clustering, recent-error drill-through |
+
+Three things that will bite the ingest if not handled there:
+
+**Suite titles use the host OS path separator** — `ui\login.spec.ts` on Windows,
+`ui/login.spec.ts` on Linux CI. `test_id` is hashed from the suite path plus the title, so
+the same test hashes differently depending on where it ran, silently splitting every test
+into two in `dim_test`. Normalise separators before hashing.
+
+**There is no `flaky` status.** Playwright emits `passed`, `failed`, `timedOut`, `skipped`
+and `interrupted` per *attempt*. Flaky is derived: a `(run, test, browser)` group whose
+final attempt passed but which has `retry > 0`. The `retry` field is what makes this
+computable, which is why retries must stay enabled in CI.
+
+**`error.message` carries ANSI colour codes.** Strip them at ingest or the dashboard shows
+escape sequences.
+
+Regenerate the file with a bare `npx playwright test`. Note that `--reporter=<x>` *replaces*
+the configured reporters (no JSON written), and `--list` overwrites the file with a listing
+whose `results[]` arrays are empty.
 
 ## Deliberate flakiness
 

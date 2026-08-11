@@ -23,6 +23,15 @@ export default defineConfig({
   /* workers: process.env.CI ? 1 : undefined, */
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [['html'],['json', { outputFile: 'results/results.json' }]],
+  /* Stamped into results.json under config.metadata. The pipeline needs a run
+     identity to key on — the JSON report carries none of its own. */
+  metadata: {
+    runId: process.env.GITHUB_RUN_ID ?? 'local',
+    runAttempt: process.env.GITHUB_RUN_ATTEMPT ?? '1',
+    commit: process.env.GITHUB_SHA ?? '',
+    branch: process.env.GITHUB_REF_NAME ?? '',
+    ci: !!process.env.CI,
+  },
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     baseURL: 'https://www.saucedemo.com',
