@@ -4,8 +4,13 @@ import { CheckoutPage } from '../pages/CheckoutPage'
 import { InventoryPage } from '../pages/InventoryPage'
 import { LoginPage } from '../pages/LoginPage'
 
+/**
+ * INTENTIONALLY FLAKY — do not "fix" these.
+ * This suite exists to give the stability dashboard real flaky data.
+ * Each test fails for a different reason so the failure modes stay
+ * distinguishable downstream. See README, "Deliberate flakiness".
+ */
 test.describe('Flaky (intentional)', ()=>{
-    //Flaky test1
     test('checkout flow under intermittent load', async({page, loggedInPage})=>{
         const inventoryPage=new InventoryPage(page);
         const cartPage=new CartPage(page);
@@ -20,12 +25,16 @@ test.describe('Flaky (intentional)', ()=>{
 
         await expect(checkoutPage.completeHeader).toHaveText('Thank you for your order!');
 
+        // INTENTIONAL: ~20% failure rate, independent per attempt, so retries
+        // usually recover it and the run reports "flaky" rather than "failed".
         expect(Math.random()).toBeGreaterThan(0.2);
     });
 
     test('inventory renders within a tight budget', async({page, loggedInPage})=>{
         const inventory=new InventoryPage(page);
 
+        // INTENTIONAL: 150ms is below the real render time on a slow network.
+        // Passes when the network is fast, fails when it is not — a true race.
         await expect(inventory.itemNames.first()).toBeVisible({timeout:150});
         expect(await inventory.getItemCount()).toBe(6);
     });
