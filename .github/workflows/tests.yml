@@ -24,3 +24,12 @@ jobs:
           name: results-${{ github.run_id }}
           path: results/
           retention-days: 90
+          if-no-files-found: error    # empty results = the pipeline has no input
+      # HTML report: previously uploaded by the scaffold playwright.yml workflow,
+      # folded in here so failures stay debuggable from a single run.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-${{ github.run_id }}
+          path: playwright-report/
+          retention-days: 30
