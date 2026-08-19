@@ -30,7 +30,7 @@ test.describe('Flaky (intentional)', ()=>{
         expect(Math.random()).toBeGreaterThan(0.2);
     });
 
-    test('inventory renders within a tight budget', async({page, loggedInPage})=>{
+    test('inventory renders within a tight timeout', async({page, loggedInPage})=>{
         const inventory=new InventoryPage(page);
 
         // INTENTIONAL: 150ms is below the real render time on a slow network.
@@ -44,12 +44,22 @@ test.describe('Flaky (intentional)', ()=>{
         const loginPage = new LoginPage(page);
         const inventoryPage = new InventoryPage(page);
 
-        await loginPage.goto();
-        await loginPage.login('performance_glitch_user','secret_sauce');
+        // Steps, not bare calls: test.step durations land in results.json, so the
+        // pipeline can see *where* the time goes rather than only how long the
+        // test took. The whole-test duration alone can't tell login from assertion.
+        await test.step('navigate to login', async () => {
+            await loginPage.goto();
+        });
+
+        await test.step('login as performance_glitch_user', async () => {
+            await loginPage.login('performance_glitch_user','secret_sauce');
+        });
 
         // INTENTIONAL: this account is throttled server-side, so it sits right
         // at the edge of this timeout. Also feeds the duration-trend chart.
-        await expect(page).toHaveURL(/inventory\.html/);
-        await expect(inventoryPage.itemNames).toHaveCount(6);
+        await test.step('assert inventory reached', async () => {
+            await expect(page).toHaveURL(/inventory\.html/);
+            await expect(inventoryPage.itemNames).toHaveCount(6);
+        });
     });
 })
