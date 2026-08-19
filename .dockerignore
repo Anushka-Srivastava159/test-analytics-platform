@@ -1,0 +1,10 @@
+node_modules
+results
+test-results
+playwright-report
+blob-report
+.git
+.github
+.venv
+__pycache__
+*.duckdb

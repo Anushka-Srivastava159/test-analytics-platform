@@ -28,8 +28,8 @@ Playwright  →  results.json  →  DuckDB  →  dbt  →  Power BI / Tableau
 
 ## Status
 
-Phase 1 — Playwright suite, in progress. Phases 2–7 (CI/CD, Docker, Python ETL, dbt, BI
-layer, cloud) follow.
+Phases 1–3 complete (Playwright suite, CI/CD, Docker). Phase 4 (Python ETL) next, then dbt,
+the BI layer and cloud.
 
 ## Layout
 
@@ -61,6 +61,46 @@ UI specs run against saucedemo.com under `chromium`, `firefox` and `webkit`. API
 under a separate `api` project with its own `baseURL` and no browser, so they execute once
 per run rather than once per browser — which also gives the dashboard a clean `suite`
 dimension to slice on.
+
+## Running in Docker
+
+```bash
+docker compose run --rm --build tests                       # whole suite
+docker compose run --rm --build tests npx playwright test --project=api
+```
+
+`--build` matters: `compose run` reuses an existing image and only builds when none exists,
+so without it you silently test the previous code. Artifacts are bind-mounted out to
+`results/`, `playwright-report/` and `test-results/` — a container's filesystem is deleted
+with the container, so anything not mounted is lost when the run ends.
+
+The image sets `CI=true`, which turns retries on. A container run therefore reports the
+seeded unstable tests as **flaky** rather than **failed**, matching what GitHub Actions
+produces; a bare local `npx playwright test` does not.
+
+**Why containerise a browser suite in particular.** Playwright's browsers are not the
+browsers you have installed — they're pinned builds it downloads, and they differ per
+platform. WebKit on Windows is a genuinely different binary from the WebKit that Linux CI
+runs, so a local pass tells you less than it appears to. The image also carries the ~100
+Linux system libraries browsers need, which is the part that's tedious to reproduce by hand.
+
+That matters more here than in most projects, because the output is *analytics*. A
+duration trend or a flake rate is only meaningful if the rows are comparable: a red result
+should mean the application broke, not that someone's laptop had a different Chromium.
+`config.metadata` makes each row **attributable** (which run, which commit); the image makes
+rows **comparable** (same binaries, same libraries, same retry policy). Both are needed
+before a trend line means anything.
+
+**Why the image tag is pinned.** `FROM mcr.microsoft.com/playwright:v1.62.1-noble` matches
+`@playwright/test` in `package.json`. Browser builds are versioned in lockstep with the
+runner, so if the two drift the image ships browsers the runner doesn't recognise and every
+test fails with `Executable doesn't exist at /ms-playwright/chromium-<n>/`. Bump both
+together, or neither.
+
+One knob the container does *not* fix: CPU count. Containers see all host cores by default,
+so `workers` (and therefore `config.metadata.actualWorkers`) still varies with the machine,
+which affects durations through contention. Left as-is deliberately — `actualWorkers` is in
+the data, so it can be measured before deciding whether it needs pinning.
 
 ## Data contract
 
@@ -119,3 +159,5 @@ anything. Locally `retries` is 0, so the same tests show up as plain failures:
 ```bash
 npx playwright test tests/ui/flaky.spec.ts --retries=2
 ```
+
+Or run in Docker, where `CI=true` is set in the image and retries are on by default.

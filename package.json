@@ -4,7 +4,10 @@
   "description": "Playwright tests run in CI, emit structured results to a warehouse, get modelled with dbt, and surface as a test-health dashboard in Power BI and Tableau.",
   "main": "index.js",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "playwright test",
+    "test:docker": "docker compose run --rm --build tests npx playwright test",
+    "report": "playwright show-report"
   },
   "repository": {
     "type": "git",

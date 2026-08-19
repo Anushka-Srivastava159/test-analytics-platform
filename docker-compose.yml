@@ -1,0 +1,24 @@
+# Canonical way to run the suite in a container.
+#
+#   docker compose run --rm --build tests                        # whole suite
+#   docker compose run --rm --build tests npx playwright test --project=api
+#
+# --build matters: `compose run` reuses an existing image and only builds when
+# none exists, so without it you silently test the previous code.
+
+services:
+  tests:
+    build: .
+    volumes:
+      # Artifacts must escape the container — its filesystem dies with it.
+      # results/       results.json, the pipeline's input
+      # playwright-report/  the HTML report
+      # test-results/  traces, screenshots and videos the report links to.
+      #                Omit this and the report renders with broken links.
+      - ./results:/app/results
+      - ./playwright-report:/app/playwright-report
+      - ./test-results:/app/test-results
+    # CI=true lives in the Dockerfile, not here, so a plain `docker run` produces
+    # the same shaped data as compose. It turns on retries, which is what makes
+    # the seeded flaky tests report as `flaky` rather than `failed` — the status
+    # the dbt stability model keys on.
