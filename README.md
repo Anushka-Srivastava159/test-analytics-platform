@@ -28,8 +28,8 @@ Playwright  →  results.json  →  DuckDB  →  dbt  →  Power BI / Tableau
 
 ## Status
 
-Phases 1–3 complete (Playwright suite, CI/CD, Docker). Phase 4 (Python ETL) next, then dbt,
-the BI layer and cloud.
+Phases 1–3 complete (Playwright suite, CI/CD, Docker). Phase 4 (Python ETL) in progress —
+the report parser is written, the DuckDB load is next. Then dbt, the BI layer and cloud.
 
 ## Layout
 
@@ -40,11 +40,11 @@ tests/
   pages/      Page objects
   fixtures/   Shared test fixtures
 pipeline/     Python: parse Playwright JSON reports -> DuckDB
-warehouse/    dbt project (models, schema tests) + DuckDB file
+warehouse/    DuckDB file, and later the dbt project (models, schema tests)
 dashboards/   Power BI / Tableau assets + screenshots
 ```
 
-Directories beyond `tests/` are created in their respective phases.
+`dashboards/` is created in its phase.
 
 ## Running the tests
 
@@ -135,7 +135,40 @@ Regenerate the file with a bare `npx playwright test`. Note that `--reporter=<x>
 the configured reporters (no JSON written), and `--list` overwrites the file with a listing
 whose `results[]` arrays are empty.
 
+## The pipeline
+
+```bash
+python pipeline/ingest.py
+python pipeline/ingest.py --json results/results.json --sample
+```
+
+`pipeline/ingest.py` turns one Playwright report into three flat row sets — a single run,
+one row per test *attempt*, and one row per `test.step()` — then prints a summary of what it
+found. Standard library only, so there is nothing to install. This is step 1 of the phase:
+parsing only, nothing is written to DuckDB yet, so the script is safe to run repeatedly.
+
+**The grain is the attempt, not the test.** One row per entry in a test's `results[]`.
+Anything coarser folds a retry together with the attempt that failed before it, discarding
+the one thing that makes flakiness computable.
+
+The three hazards named in the data contract are all handled at this boundary, and the
+summary *demonstrates* it rather than asserting it. It prints the number of rows still
+containing ANSI escapes and the number of `test_id`s mapping to more than one file path —
+both must be `0` — and it derives the flaky `(test, project)` groups from `retry` and prints
+them beside the count Playwright itself reported. Those three lines are the regression test
+for the contract until real schema tests exist.
+
+**`run_key`, not `runId`.** `config.metadata.runId` is the literal string `local` for every
+run outside CI, so on its own it collides with the previous local run. The key is
+`runId-runAttempt-startTime`: stable for a CI run, unique for a local one.
+
+**An empty parse exits non-zero.** A report written by `--list`, or by a `--reporter=`
+override that suppressed the JSON reporter, is a valid-looking file whose `results[]` arrays
+are empty. Loading it quietly would look like a run in which nothing happened.
+
 ## Deliberate flakiness
+
+> Write-up: [I made my test suite flaky on purpose](https://dev.to/anushka_srivastava_6ba849/i-made-my-test-suite-flaky-on-purpose-5c6)
 
 `tests/ui/flaky.spec.ts` is **intentionally unstable, and should not be "fixed."** A
 stability dashboard with nothing to plot proves nothing, so the suite generates its own
