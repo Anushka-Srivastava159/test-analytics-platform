@@ -16,8 +16,9 @@ import argparse
 import hashlib
 import json
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
+import duckdb
 
 # Playwright colours error messages for the terminal. Left in, the dashboard shows
 # escape sequences instead of text.
@@ -25,6 +26,76 @@ ANSI = re.compile(r"\x1b\[[0-9;]*m")
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_JSON = REPO_ROOT / "results" / "results.json"
+DEFAULT_DB = REPO_ROOT/ "warehouse" / "test_analytics.duckdb"
+
+#Raw ingest stays dumb - cleaning and confirming is dbt's job in phase 5
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS raw_runs (
+    run_key         VARCHAR PRIMARY KEY,
+    run_id          VARCHAR,      -- 'local' outside CI
+    run_attempt     INTEGER,
+    commit_sha      VARCHAR,
+    branch          VARCHAR,
+    is_ci           BOOLEAN,
+    actual_workers  INTEGER,      -- affects durations via contention; see README
+    started_at      TIMESTAMP,
+    duration_ms     DOUBLE,
+    expected        INTEGER,
+    unexpected      INTEGER,
+    flaky           INTEGER,
+    skipped         INTEGER,
+    ingested_at     TIMESTAMP,
+    source          VARCHAR       -- 'playwright' | 'seed'
+);
+CREATE TABLE IF NOT EXISTS raw_test_results (
+    run_key         VARCHAR,
+    test_id         VARCHAR,      -- sha1(normalised_file + '::' + full_title)
+    file_path       VARCHAR,      -- forward slashes, always
+    suite_path      VARCHAR,      -- nested suite titles joined ' > '
+    test_title      VARCHAR,
+    project_name    VARCHAR,      -- api | chromium | firefox | webkit
+    retry           INTEGER,      -- 0 = first attempt
+    status          VARCHAR,      -- per-attempt
+    rollup_status   VARCHAR,      -- test.status: expected|unexpected|flaky|skipped
+    duration_ms     DOUBLE,
+    started_at      TIMESTAMP,
+    worker_index    INTEGER,
+    error_message   VARCHAR,      -- ANSI stripped
+    error_location  VARCHAR,
+    PRIMARY KEY (run_key, test_id, project_name, retry)
+);
+
+CREATE TABLE IF NOT EXISTS raw_test_steps (
+    run_key      VARCHAR,
+    test_id      VARCHAR,
+    project_name VARCHAR,
+    retry        INTEGER,
+    step_index   INTEGER,
+    step_title   VARCHAR,
+    duration_ms  DOUBLE,
+    PRIMARY KEY (run_key, test_id, project_name, retry, step_index)
+);
+"""
+
+# Inserts name their columns rather than relying on dict order: `run` ends with
+# `source` but the table has `ingested_at` before it, so a positional insert would
+# put a timestamp in the source column. These must match the CREATE TABLEs above.
+RUN_COLS = [
+    "run_key", "run_id", "run_attempt", "commit_sha", "branch", "is_ci",
+    "actual_workers", "started_at", "duration_ms", "expected", "unexpected",
+    "flaky", "skipped", "ingested_at", "source",
+]
+
+RESULT_COLS = [
+    "run_key", "test_id", "file_path", "suite_path", "test_title", "project_name",
+    "retry", "status", "rollup_status", "duration_ms", "started_at", "worker_index",
+    "error_message", "error_location",
+]
+
+STEP_COLS = [
+    "run_key", "test_id", "project_name", "retry", "step_index", "step_title",
+    "duration_ms",
+]
 
 
 def strip_ansi(text: str | None) -> str:
@@ -49,7 +120,8 @@ def make_test_id(file_path: str, titles: list[str]) -> str:
 def parse_timestamp(value: str | None) -> datetime | None:
     if not value:
         return None
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    return dt.astimezone(timezone.utc).replace(tzinfo = None)
 
 
 def walk_specs(suite: dict, path: tuple[str, ...] = ()):
@@ -208,6 +280,10 @@ def main() -> None:
                         help="Playwright JSON report (default: results/results.json)")
     parser.add_argument("--sample", action="store_true",
                         help="print a couple of parsed rows in full")
+    parser.add_argument("--db", type=Path, default=DEFAULT_DB,
+                        help="DuckDB file to load into (default: warehouse/test_analytics.duckdb)")
+    parser.add_argument("--no-load", action="store_true",
+                        help="parse and summarise only, write nothing")
     args = parser.parse_args()
 
     if not args.json.exists():
@@ -232,6 +308,47 @@ def main() -> None:
             for step in steps[:3]:
                 print(json.dumps(step, default=str))
 
+    if args.no_load:
+        return
+
+    args.db.parent.mkdir(parents=True, exist_ok=True)
+    con = duckdb.connect(str(args.db))
+    try:
+        load(con, run, results, steps)
+    finally:
+        # Close even if load raised, or the .wal is left behind holding the file.
+        con.close()
+
+    print(f"\nloaded {len(results)} attempts into {args.db}")
+
+def insert(con: duckdb.DuckDBPyConnection, table: str, cols: list[str], rows:  list[dict]) -> None:
+    """Insert rows by column name, so dict order can never silently reshuffle them."""
+    if not rows:
+        return
+    placeholders=",".join("?" * len(cols))
+    con.executemany(
+        f"INSERT INTO {table} ({', '.join(cols)}) VALUES ({placeholders})",
+        [[row.get(col) for col in cols] for row in rows],
+    )
+
+def load(con: duckdb.DuckDBPyConnection, run: dict, results: list[dict], steps: list[dict]) -> None:
+        # Write one parsed report into DuckDB.
+        con.execute(SCHEMA)
+
+        run = dict(run, ingested_at=datetime.now(timezone.utc).replace(tzinfo=None))
+
+        con.execute("BEGIN TRANSACTION")
+        try:
+            for table in ("raw_test_steps", "raw_test_results", "raw_runs"):
+                con.execute(f"DELETE FROM {table} WHERE run_key = ?", [run["run_key"]])
+
+            insert(con, "raw_runs", RUN_COLS, [run])
+            insert(con, "raw_test_results", RESULT_COLS, results)
+            insert(con, "raw_test_steps", STEP_COLS, steps)
+            con.execute("COMMIT")
+        except Exception:
+            con.execute("ROLLBACK")
+            raise
 
 if __name__ == "__main__":
     main()
