@@ -19,8 +19,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
-  /* workers: process.env.CI ? 1 : undefined, */
+  /* Worker count is pinned in CI via PW_WORKERS so durations stay comparable between
+     runs — a run that happened to get more parallelism finishes faster for reasons
+     that have nothing to do with the tests. Undefined locally = Playwright's default. */
+  workers: process.env.PW_WORKERS ? Number(process.env.PW_WORKERS) : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [['html'],['json', { outputFile: 'results/results.json' }]],
   /* Stamped into results.json under config.metadata. The pipeline needs a run
@@ -31,6 +33,9 @@ export default defineConfig({
     commit: process.env.GITHUB_SHA ?? '',
     branch: process.env.GITHUB_REF_NAME ?? '',
     ci: !!process.env.CI,
+    /* Same env var that sets `workers` above, so the number recorded in the warehouse
+       is always the number actually used — not a value that drifted out of sync. */
+    actualWorkers: process.env.PW_WORKERS ?? '',
   },
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {

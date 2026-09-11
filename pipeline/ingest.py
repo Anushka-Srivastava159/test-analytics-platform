@@ -15,6 +15,7 @@ of the project.
 import argparse
 import hashlib
 import json
+import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -98,6 +99,14 @@ STEP_COLS = [
 ]
 
 
+def to_int(value) -> int | None:
+    """'2' -> 2, '' -> None, None -> None. Anything unparseable becomes None."""
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
 def strip_ansi(text: str | None) -> str:
     return ANSI.sub("", text or "").strip()
 
@@ -158,7 +167,9 @@ def parse(report: dict) -> tuple[dict, list[dict], list[dict]]:
         "commit_sha": metadata.get("commit", ""),
         "branch": metadata.get("branch", ""),
         "is_ci": bool(metadata.get("ci", False)),
-        "actual_workers": metadata.get("actualWorkers"),
+        # Env vars arrive as strings ('2'), the column is INTEGER, and an unset var
+        # arrives as '' — which is neither a number nor NULL until it is coerced.
+        "actual_workers": to_int(metadata.get("actualWorkers")),
         "started_at": started_at,
         "duration_ms": stats.get("duration"),
         "expected": stats.get("expected", 0),
@@ -280,8 +291,12 @@ def main() -> None:
                         help="Playwright JSON report (default: results/results.json)")
     parser.add_argument("--sample", action="store_true",
                         help="print a couple of parsed rows in full")
-    parser.add_argument("--db", type=Path, default=DEFAULT_DB,
-                        help="DuckDB file to load into (default: warehouse/test_analytics.duckdb)")
+    # Kept as a string, not a Path: WAREHOUSE_DB may hold a MotherDuck URI ("md:name")
+    # rather than a filename, and Path() would mangle it. CI sets the env var so the
+    # workflow never has to repeat the path.
+    parser.add_argument("--db", default=os.environ.get("WAREHOUSE_DB") or str(DEFAULT_DB),
+                        help="DuckDB file or md: URI to load into "
+                             "(default: $WAREHOUSE_DB, else warehouse/test_analytics.duckdb)")
     parser.add_argument("--no-load", action="store_true",
                         help="parse and summarise only, write nothing")
     args = parser.parse_args()
@@ -311,8 +326,11 @@ def main() -> None:
     if args.no_load:
         return
 
-    args.db.parent.mkdir(parents=True, exist_ok=True)
-    con = duckdb.connect(str(args.db))
+    # "md:..." is MotherDuck, not a file — there is no parent directory to create.
+    if not args.db.startswith("md:"):
+        Path(args.db).parent.mkdir(parents=True, exist_ok=True)
+
+    con = duckdb.connect(args.db)
     try:
         load(con, run, results, steps)
     finally:

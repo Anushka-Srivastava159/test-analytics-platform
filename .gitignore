@@ -25,3 +25,8 @@ logs/
 /playwright/.auth/
 
 *.duckdb
+
+# The warehouse is committed on purpose: CI ingests into it and pushes it back,
+# so the repo carries the run history and dashboards can open it with no server.
+# Everything else DuckDB writes (WAL, scratch DBs) stays ignored above.
+!warehouse/test_analytics.duckdb

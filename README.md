@@ -29,7 +29,8 @@ Playwright  →  results.json  →  DuckDB  →  dbt  →  Power BI / Tableau
 ## Status
 
 Phases 1–3 complete (Playwright suite, CI/CD, Docker). Phase 4 (Python ETL) in progress —
-the report parser is written, the DuckDB load is next. Then dbt, the BI layer and cloud.
+the report parser and the DuckDB load are both working; seeding a run history and
+calibrating it are next. Then dbt, the BI layer and cloud.
 
 ## Layout
 
@@ -138,14 +139,29 @@ whose `results[]` arrays are empty.
 ## The pipeline
 
 ```bash
-python pipeline/ingest.py
-python pipeline/ingest.py --json results/results.json --sample
+pip install -r pipeline/requirements.txt
+
+python pipeline/ingest.py                                       # parse, summarise, load
+python pipeline/ingest.py --json results/results.json --sample  # print full sample rows
+python pipeline/ingest.py --no-load                             # parse and summarise only
 ```
 
 `pipeline/ingest.py` turns one Playwright report into three flat row sets — a single run,
-one row per test *attempt*, and one row per `test.step()` — then prints a summary of what it
-found. Standard library only, so there is nothing to install. This is step 1 of the phase:
-parsing only, nothing is written to DuckDB yet, so the script is safe to run repeatedly.
+one row per test *attempt*, and one row per `test.step()` — prints a summary of what it
+found, and loads the rows into DuckDB at `warehouse/test_analytics.duckdb`. DuckDB is the
+only dependency; everything else is standard library.
+
+**The load is idempotent per run.** The three tables — `raw_runs`, `raw_test_results`,
+`raw_test_steps` — are created on first use, and each load deletes any existing rows for
+that `run_key` before reinserting, all inside one transaction. Re-ingesting the same report
+replaces it rather than doubling it, so the script stays safe to run repeatedly. `--no-load`
+gives back the parse-only behaviour when you just want to inspect a report.
+
+**The raw tables stay raw.** Playwright's field names and values are carried across
+as-is — no renaming, no derived columns, no filtering. Conforming and cleaning is dbt's job
+in phase 5; ingest's only job is to make the rows *land*, and land identically each time.
+The `warehouse/` DuckDB file is gitignored, so it is rebuilt locally by re-running the
+script rather than checked in.
 
 **The grain is the attempt, not the test.** One row per entry in a test's `results[]`.
 Anything coarser folds a retry together with the attempt that failed before it, discarding
@@ -157,6 +173,12 @@ containing ANSI escapes and the number of `test_id`s mapping to more than one fi
 both must be `0` — and it derives the flaky `(test, project)` groups from `retry` and prints
 them beside the count Playwright itself reported. Those three lines are the regression test
 for the contract until real schema tests exist.
+
+One caveat on the second of those lines: it can only catch a separator split once results
+from more than one platform are in the table. A report from a single run has a single
+separator style, so `test_ids mapping to >1 file path: 0` passes trivially. Ingesting a
+Windows `npx playwright test` run and a `docker compose run` of the same suite into the
+same file is what actually exercises `normalise_path`.
 
 **`run_key`, not `runId`.** `config.metadata.runId` is the literal string `local` for every
 run outside CI, so on its own it collides with the previous local run. The key is
