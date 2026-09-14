@@ -57,7 +57,7 @@ test.describe('Flaky (intentional)', ()=>{
 
         // INTENTIONAL: this account is throttled server-side, so it sits right
         // at the edge of this timeout. Also feeds the duration-trend chart.
-        await test.step('assert inventory reached', async () => {
+        await test.step('asset inventory reached', async () => {
             await expect(page).toHaveURL(/inventory\.html/);
             await expect(inventoryPage.itemNames).toHaveCount(6);
         });
