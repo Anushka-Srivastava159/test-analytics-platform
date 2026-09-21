@@ -28,9 +28,10 @@ Playwright  →  results.json  →  DuckDB  →  dbt  →  Power BI / Tableau
 
 ## Status
 
-Phases 1–3 complete (Playwright suite, CI/CD, Docker). Phase 4 (Python ETL) in progress —
-the report parser and the DuckDB load are both working; seeding a run history and
-calibrating it are next. Then dbt, the BI layer and cloud.
+Phases 1–4 complete (Playwright suite, CI/CD, Docker, Python ETL). Every CI run ingests
+its own report into the committed DuckDB warehouse, and the runs from before that was
+wired up were backfilled from their artifacts — the warehouse holds a continuous nightly
+history from 5 Aug 2026. Phase 5 (dbt) is next, then the BI layer and cloud.
 
 ## Layout
 
@@ -141,10 +142,14 @@ whose `results[]` arrays are empty.
 ```bash
 pip install -r pipeline/requirements.txt
 
-python pipeline/ingest.py                                       # parse, summarise, load
-python pipeline/ingest.py --json results/results.json --sample  # print full sample rows
+python pipeline/ingest.py --db warehouse/local.duckdb          # parse, summarise, load
+python pipeline/ingest.py --no-load --sample                    # print full sample rows
 python pipeline/ingest.py --no-load                             # parse and summarise only
 ```
+
+Locally, load into a scratch file as above, never into `warehouse/test_analytics.duckdb` —
+that one belongs to CI (see below). `*.duckdb` is gitignored apart from the CI warehouse,
+so a scratch DB stays untracked with no extra config.
 
 `pipeline/ingest.py` turns one Playwright report into three flat row sets — a single run,
 one row per test *attempt*, and one row per `test.step()` — prints a summary of what it
@@ -160,8 +165,23 @@ gives back the parse-only behaviour when you just want to inspect a report.
 **The raw tables stay raw.** Playwright's field names and values are carried across
 as-is — no renaming, no derived columns, no filtering. Conforming and cleaning is dbt's job
 in phase 5; ingest's only job is to make the rows *land*, and land identically each time.
-The `warehouse/` DuckDB file is gitignored, so it is rebuilt locally by re-running the
-script rather than checked in.
+
+**The warehouse is committed, and only CI writes to it.** After the suite runs, the
+workflow fetches the newest `warehouse/test_analytics.duckdb` from `main`, ingests the
+run's report into it and pushes it back, so every clone carries the full run history and
+the dashboard can open it with no server. DuckDB is a binary file, so git cannot merge two
+versions of it — a single writer is what keeps that safe. The job holds a `concurrency`
+lock so two runs queue rather than overwrite each other, and the commit is marked
+`[skip ci]` and excluded by `paths-ignore` so it cannot trigger another run. CI also pins
+`PW_WORKERS: 2`, which keeps durations comparable from one run to the next; a laptop run
+would not be.
+
+**Runs from before the CI ingest were backfilled** from their `results-<run_id>` artifacts
+(kept for 90 days). Two things in that early history for the dbt staging layer to handle:
+the runs before run identity was stamped into the report have `run_id = 'local'` even
+though they ran in CI (`is_ci` is still true), and one local Docker run
+(`local-1-2026-08-19T17:24:59.568000`) is in the table and should be excluded from trends —
+by key, since the image sets `CI=true` and it reports `is_ci` as true as well.
 
 **The grain is the attempt, not the test.** One row per entry in a test's `results[]`.
 Anything coarser folds a retry together with the attempt that failed before it, discarding
