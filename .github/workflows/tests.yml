@@ -4,8 +4,9 @@ on:
   push:
     # The ingest step commits the warehouse back to this repo. Without this the
     # commit would trigger another run, which would commit again — forever.
+    # Only the DuckDB file: a push that changes the dbt project must still run.
     paths-ignore:
-      - 'warehouse/**'
+      - 'warehouse/test_analytics.duckdb'
   schedule:
     - cron: '0 2 * * *'    # nightly — builds the time series
   workflow_dispatch:
@@ -73,6 +74,15 @@ jobs:
           git fetch origin main
           git rebase origin/main
           git push origin HEAD:main
+
+      # ---- model: DuckDB -> dbt staging + marts -----------------------------
+      # After the commit on purpose: a model or data-test failure turns the run red,
+      # but the run's raw rows have already landed, so history keeps no gap.
+      # Builds into an ephemeral dev.duckdb; the warehouse is attached read-only.
+      - run: pip install -r warehouse/requirements.txt
+      - name: dbt build
+        working-directory: warehouse
+        run: dbt build
 
       # ---- artifacts: raw inputs, kept independently of the warehouse ------
       - uses: actions/upload-artifact@v4

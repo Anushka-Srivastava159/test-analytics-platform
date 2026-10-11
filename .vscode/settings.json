@@ -1,0 +1,13 @@
+{
+  // dbt models are Jinja + DuckDB SQL. Without this the SQL Server extension parses
+  // them as T-SQL and flags {{ ref() }}, QUALIFY and boolean selects as errors.
+  "files.associations": {
+    "**/warehouse/**/*.sql": "jinja-sql",
+    "**/warehouse/**/*.yml": "jinja-yaml"
+  },
+  // Power User for dbt runs dbt with this interpreter, which has dbt-duckdb installed.
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+  // profiles.yml lives in the dbt project, not ~/.dbt.
+  "dbt.profilesDirOverride": "${workspaceFolder}/warehouse",
+  "dbt.perspectiveTheme": "Vintage"
+}
