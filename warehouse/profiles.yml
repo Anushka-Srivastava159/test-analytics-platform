@@ -1,0 +1,17 @@
+# Lives in the project so a clone needs no ~/.dbt setup. dbt picks it up when run
+# from this directory.
+#
+# dbt never writes to the CI warehouse. The models build into a separate file, and
+# test_analytics.duckdb is attached read-only as the `raw` catalog — the same rule the
+# README sets for ingest: only CI writes to the committed warehouse.
+test_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('DBT_DUCKDB_PATH', 'dev.duckdb') }}"
+      threads: 4
+      attach:
+        - path: "{{ env_var('WAREHOUSE_DB', 'test_analytics.duckdb') }}"
+          alias: raw
+          read_only: true

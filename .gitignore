@@ -30,3 +30,6 @@ logs/
 # so the repo carries the run history and dashboards can open it with no server.
 # Everything else DuckDB writes (WAL, scratch DBs) stays ignored above.
 !warehouse/test_analytics.duckdb
+
+# dbt writes a per-user id file into the project
+warehouse/.user.yml

@@ -1,0 +1,44 @@
+version: 2
+
+models:
+  - name: stg_runs
+    columns:
+      - name: run_key
+        data_tests: [unique, not_null]
+      - name: started_at
+        data_tests: [not_null]
+
+  - name: stg_test_results
+    columns:
+      - name: attempt_key
+        data_tests: [unique, not_null]
+      - name: run_key
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_runs')
+                field: run_key
+      - name: project_name
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['api', 'chromium', 'firefox', 'webkit']
+      - name: suite
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['ui', 'api']
+      - name: status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['passed', 'failed', 'timedOut', 'skipped', 'interrupted']
+
+  - name: stg_test_steps
+    columns:
+      - name: attempt_key
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_test_results')
+                field: attempt_key

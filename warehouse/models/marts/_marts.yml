@@ -1,0 +1,56 @@
+version: 2
+
+models:
+  - name: dim_run
+    description: One row per run that counts towards trends.
+    columns:
+      - name: run_key
+        data_tests: [unique, not_null]
+
+  - name: dim_test
+    description: One row per test, identified across runs and operating systems.
+    columns:
+      - name: test_id
+        data_tests: [unique, not_null]
+
+  - name: dim_browser
+    columns:
+      - name: project_name
+        data_tests: [unique, not_null]
+
+  - name: fct_test_run
+    description: One row per test attempt.
+    columns:
+      - name: attempt_key
+        data_tests: [unique, not_null]
+      - name: run_key
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_run')
+                field: run_key
+      - name: test_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_test')
+                field: test_id
+      - name: project_name
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_browser')
+                field: project_name
+
+  - name: fct_test_outcome
+    description: One row per (run, test, browser), rolled up across retries.
+    columns:
+      - name: outcome_key
+        data_tests: [unique, not_null]
+      - name: final_status
+        data_tests: [not_null]
+      - name: outcome
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['passed', 'flaky', 'failed', 'skipped']

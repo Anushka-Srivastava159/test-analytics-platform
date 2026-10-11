@@ -1,0 +1,19 @@
+name: test_analytics
+version: '1.0.0'
+profile: test_analytics
+
+model-paths: ["models"]
+test-paths: ["tests"]
+
+vars:
+  # Runs that are in raw_runs but must not reach any trend. Excluded by key, not by
+  # is_ci: the Docker image sets CI=true, so this local run reports is_ci = true too.
+  excluded_run_keys:
+    - 'local-1-2026-08-19T17:24:59.568000'   # local docker compose run, 4 workers
+
+models:
+  test_analytics:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table

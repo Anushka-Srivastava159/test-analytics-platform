@@ -1,0 +1,19 @@
+version: 2
+
+sources:
+  - name: raw
+    description: >
+      Written by pipeline/ingest.py, one transaction per Playwright report. Field names
+      and values are Playwright's, untouched — conforming them is this project's job.
+    database: raw
+    schema: main
+    tables:
+      - name: raw_runs
+        description: One row per ingested report.
+        columns:
+          - name: run_key
+            data_tests: [unique, not_null]
+      - name: raw_test_results
+        description: One row per test attempt — an entry in a test's results[] array.
+      - name: raw_test_steps
+        description: One row per test.step() inside an attempt. Sparse by design.
