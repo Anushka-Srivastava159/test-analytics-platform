@@ -36,7 +36,15 @@ export class InventoryPage {
         await this.sortDropdown.selectOption(value);
     }
 
+    // count(), allTextContents() and evaluateAll() read the page once and do not retry,
+    // so straight after login they can see an inventory that has not rendered yet and
+    // return 0 / []. Wait for the first item before any of them read the list.
+    private async waitForItems() {
+        await this.itemNames.first().waitFor();
+    }
+
     async getItemCount(): Promise<number> {
+        await this.waitForItems();
         return await this.itemNames.count();
     }
     
@@ -46,11 +54,13 @@ export class InventoryPage {
     }
 
     async getPrices(): Promise<number[]> {
+        await this.waitForItems();
         const texts=await this.itemPrices.allTextContents();
         return texts.map(text => parseFloat(text.replace('$', '')));
     }
 
     async getItemNames(): Promise<string[]> {
+        await this.waitForItems();
         return await this.itemNames.allTextContents();
     }
 
@@ -60,6 +70,7 @@ export class InventoryPage {
         .locator('img');}
 
     async getImageSrcs(): Promise<(string | null)[]> {
+        await this.waitForItems();
         return await this.inventoryImages.evaluateAll((imgs) => imgs
         .map(img => (img as HTMLImageElement).src));
     }

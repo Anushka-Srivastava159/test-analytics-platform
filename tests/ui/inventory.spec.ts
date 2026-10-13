@@ -23,8 +23,7 @@ test.describe('Inventory',()=>{
     
     test('all products display distinct images', async ({page, loggedInPage}) => {
         const inventoryPage = new InventoryPage(page);
-        const srcs=await page.locator('[data-test="inventory-item"] img')
-        .evaluateAll(imgs=>imgs.map(i=>i.getAttribute('src')));
+        const srcs=await inventoryPage.getImageSrcs();
         
         expect(srcs.length).toBeGreaterThan(0);
         expect(new Set(srcs).size).toBe(srcs.length);
