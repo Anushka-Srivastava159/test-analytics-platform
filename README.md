@@ -235,6 +235,13 @@ attached read-only as the `raw` catalog and the models build into a separate `de
 | | `dim_browser` | one Playwright project, with its engine; `api` has no browser |
 | | `fct_test_run` | one test attempt |
 | | `fct_test_outcome` | one (run, test, browser), rolled up across retries |
+| | `rpt_test_stability` | one (test, browser, day): outcome counts, flake and failure rates, p50/p95 duration |
+
+**`rpt_test_stability` is what the dashboards read.** Flake rate and duration percentiles
+are defined once, here, rather than twice in two BI tools' formula languages. A day can hold
+more than one run (push + nightly). Rates exclude skipped outcomes from the denominator, and
+the duration percentiles cover passing final attempts only — a timed-out attempt is cut off
+at the timeout, so it would report the budget rather than how long the test took.
 
 **Flaky is derived, then checked.** `fct_test_outcome.outcome` is computed from retries:
 `flaky` when the final attempt passed and `max_retry > 0`. Playwright's own verdict is
@@ -242,7 +249,7 @@ carried alongside as `playwright_rollup_status`, so the derivation can be tested
 trusted.
 
 **The data tests reconcile the models with Playwright.** Beyond the usual `unique`,
-`not_null`, `accepted_values` and `relationships` checks, four singular tests in
+`not_null`, `accepted_values` and `relationships` checks, five singular tests in
 `warehouse/tests/` encode the data contract:
 
 | test | fails when |
@@ -251,6 +258,7 @@ trusted.
 | `assert_outcomes_match_run_totals` | a run's derived passed/flaky/failed counts differ from the totals it reported |
 | `assert_no_ansi_in_errors` | an error message still carries a terminal colour code |
 | `assert_test_id_has_one_file_path` | a test split in two because a path separator wasn't normalised |
+| `assert_stability_counts_match_outcomes` | the daily rollup in `rpt_test_stability` gained or lost an outcome |
 
 **CI builds the models after every ingest.** The `dbt build` step runs *after* the warehouse
 commit, on purpose: a model or data-test failure turns the run red, but the run's raw rows
