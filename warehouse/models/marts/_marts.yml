@@ -54,3 +54,23 @@ models:
           - accepted_values:
               arguments:
                 values: ['passed', 'flaky', 'failed', 'skipped']
+
+  - name: rpt_test_stability
+    description: >
+      One row per (test, browser, day). Flake and failure rates exclude skipped
+      outcomes; duration percentiles cover passing final attempts only.
+    columns:
+      - name: stability_key
+        data_tests: [unique, not_null]
+      - name: test_id
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_test')
+                field: test_id
+      - name: project_name
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_browser')
+                field: project_name
