@@ -26,19 +26,22 @@ env:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # Pinned, not ubuntu-latest: a runner image change shifts timing, and the
+    # 11 Sep 2026 image update is when a latent race in the inventory tests began
+    # flaking. An OS upgrade should be a dated, deliberate change to the time series.
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
       - run: npm ci
       - run: npx playwright install --with-deps
       - run: npx playwright test
         continue-on-error: true       # failures are DATA, not build breaks
 
       # ---- ingest: results.json -> DuckDB ----------------------------------
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - run: pip install -r pipeline/requirements.txt
@@ -85,7 +88,7 @@ jobs:
         run: dbt build
 
       # ---- artifacts: raw inputs, kept independently of the warehouse ------
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: results-${{ github.run_id }}
@@ -94,7 +97,7 @@ jobs:
           if-no-files-found: error    # empty results = the pipeline has no input
       # HTML report: previously uploaded by the scaffold playwright.yml workflow,
       # folded in here so failures stay debuggable from a single run.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report-${{ github.run_id }}
