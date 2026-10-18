@@ -1,0 +1,20 @@
+table Date
+	lineageTag: 35cd4c45-8bd8-4d88-b8d5-9f8534eb8058
+	dataCategory: Time
+
+	column Date
+		isKey
+		formatString: General Date
+		lineageTag: 3831b722-8571-4072-ac17-405742c73f37
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Date]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Date = calculated
+		mode: import
+		source = CALENDAR(MIN(dim_run[run_date]), MAX(dim_run[run_date]))
+
+	annotation PBI_Id = 32f638e625474fcdaca168e998234dd6
+

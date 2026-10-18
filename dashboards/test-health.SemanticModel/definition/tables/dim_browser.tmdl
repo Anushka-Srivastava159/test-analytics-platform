@@ -1,0 +1,43 @@
+table dim_browser
+	lineageTag: febcaec3-2360-4017-b22a-0ce9fe0184f6
+
+	column project_name
+		dataType: string
+		lineageTag: 297d892d-cfb4-41c7-bb2c-5a9197e2f39e
+		summarizeBy: none
+		sourceColumn: project_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_browser
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 4da6a3d7-93a1-4a5c-be52-149301d9a1f7
+		summarizeBy: none
+		sourceColumn: is_browser
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column engine
+		dataType: string
+		lineageTag: 307713f6-19e8-4821-991c-1965165d200c
+		summarizeBy: none
+		sourceColumn: engine
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_browser = m
+		mode: import
+		source =
+				let
+				    Source = Odbc.DataSource("dsn=test_analytics", [HierarchicalNavigation=true]),
+				    dev_Database = Source{[Name="dev",Kind="Database"]}[Data],
+				    main_Schema = dev_Database{[Name="main",Kind="Schema"]}[Data],
+				    dim_browser_Table = main_Schema{[Name="dim_browser",Kind="Table"]}[Data]
+				in
+				    dim_browser_Table
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,85 @@
+table dim_test
+	lineageTag: 22febbc2-b78b-4349-8911-07dd261646c0
+
+	column test_id
+		dataType: string
+		lineageTag: 7fd012cc-8594-4302-8459-ba24c94ec0bf
+		summarizeBy: none
+		sourceColumn: test_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column suite
+		dataType: string
+		lineageTag: f97fd2bd-c7b1-4ae8-ae88-0dfea783da99
+		summarizeBy: none
+		sourceColumn: suite
+
+		annotation SummarizationSetBy = Automatic
+
+	column file_path
+		dataType: string
+		lineageTag: 8372df01-a239-4822-b9b8-fa1a9a065324
+		summarizeBy: none
+		sourceColumn: file_path
+
+		annotation SummarizationSetBy = Automatic
+
+	column describe_path
+		dataType: string
+		lineageTag: d98f3610-fe5a-4dab-aaae-5a132fb32915
+		summarizeBy: none
+		sourceColumn: describe_path
+
+		annotation SummarizationSetBy = Automatic
+
+	column test_title
+		dataType: string
+		lineageTag: 29208244-02be-4e71-afe0-ca4da30036a7
+		summarizeBy: none
+		sourceColumn: test_title
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_intentionally_flaky
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 77cb7bab-c42d-4bba-81a2-0ba3d1ac7cca
+		summarizeBy: none
+		sourceColumn: is_intentionally_flaky
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column first_seen_at
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 67ab8cb9-6bc8-47cb-8199-7c56172bcd7f
+		summarizeBy: none
+		sourceColumn: first_seen_at
+
+		annotation SummarizationSetBy = Automatic
+
+	column last_seen_at
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 5350c847-a579-414c-ab65-cdf2332c28d2
+		summarizeBy: none
+		sourceColumn: last_seen_at
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_test = m
+		mode: import
+		source =
+				let
+				    Source = Odbc.DataSource("dsn=test_analytics", [HierarchicalNavigation=true]),
+				    dev_Database = Source{[Name="dev",Kind="Database"]}[Data],
+				    main_Schema = dev_Database{[Name="main",Kind="Schema"]}[Data],
+				    dim_test_Table = main_Schema{[Name="dim_test",Kind="Table"]}[Data]
+				in
+				    dim_test_Table
+
+	annotation PBI_ResultType = Table
+

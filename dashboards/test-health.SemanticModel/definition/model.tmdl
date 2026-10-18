@@ -1,0 +1,24 @@
+model Model
+	culture: en-IN
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-IN
+	valueFilterBehavior: independent
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_QueryOrder = ["rpt_test_stability","fct_test_outcome","dim_run","dim_browser","dim_test"]
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table rpt_test_stability
+ref table fct_test_outcome
+ref table dim_run
+ref table dim_browser
+ref table dim_test
+ref table Date
+
+ref cultureInfo en-IN
+

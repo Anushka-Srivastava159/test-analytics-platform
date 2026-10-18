@@ -1,0 +1,28 @@
+relationship AutoDetected_c3241c96-fc2f-400a-87d9-2bbdfe165a22
+	fromColumn: rpt_test_stability.test_id
+	toColumn: dim_test.test_id
+
+relationship AutoDetected_67ed7628-474d-477a-bb99-ec09d3ccc368
+	fromColumn: fct_test_outcome.test_id
+	toColumn: dim_test.test_id
+
+relationship AutoDetected_5856409e-c381-496c-8027-64df5de85855
+	fromColumn: rpt_test_stability.project_name
+	toColumn: dim_browser.project_name
+
+relationship AutoDetected_da3c2461-7b5e-4d86-af58-f40761f093a8
+	fromColumn: fct_test_outcome.project_name
+	toColumn: dim_browser.project_name
+
+relationship AutoDetected_c24cc512-fbf6-45af-ac5c-171d7c6fde5d
+	fromColumn: fct_test_outcome.run_key
+	toColumn: dim_run.run_key
+
+relationship f6602b34-1dc0-2e93-327b-464d0a3c7b52
+	fromColumn: dim_run.run_date
+	toColumn: Date.Date
+
+relationship 2be1d337-73dd-49e6-8469-96b28d170e38
+	fromColumn: rpt_test_stability.run_date
+	toColumn: Date.Date
+

@@ -1,0 +1,183 @@
+table rpt_test_stability
+	lineageTag: d8017144-b6b3-477e-8159-ba2f3ae8ee75
+
+	measure 'Flake rate' = DIVIDE(SUM(rpt_test_stability[flaky_count]), SUM(rpt_test_stability[outcome_count]) - SUM(rpt_test_stability[skipped_count]))
+		lineageTag: 3480ba69-ee6b-4330-baf3-7014b2825404
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Failure rate' = DIVIDE(SUM(rpt_test_stability[failed_count]), SUM(rpt_test_stability[outcome_count]) - SUM(rpt_test_stability[skipped_count]))
+		lineageTag: deeedc4b-c60e-464e-bb9c-58feabc03543
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column stability_key
+		dataType: string
+		lineageTag: 27b72560-4b41-4d20-be89-ebd867f22ba6
+		summarizeBy: none
+		sourceColumn: stability_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column test_id
+		dataType: string
+		lineageTag: d593d061-c2de-4985-ac41-401a463c63c3
+		summarizeBy: none
+		sourceColumn: test_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column project_name
+		dataType: string
+		lineageTag: a24086be-f74e-4bd9-86af-08eb861dc0f4
+		summarizeBy: none
+		sourceColumn: project_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column run_date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: ab7d35aa-defc-4617-97a9-073a4390fe3c
+		summarizeBy: none
+		sourceColumn: run_date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column suite
+		dataType: string
+		lineageTag: 92647761-3cbf-48a2-9b0b-f7b60b74c49c
+		summarizeBy: none
+		sourceColumn: suite
+
+		annotation SummarizationSetBy = Automatic
+
+	column test_title
+		dataType: string
+		lineageTag: c2347186-c656-4c9c-8f87-d59392079709
+		summarizeBy: none
+		sourceColumn: test_title
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_intentionally_flaky
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 0b3e1636-e8ef-45a2-bcfb-63d945875417
+		summarizeBy: none
+		sourceColumn: is_intentionally_flaky
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column outcome_count
+		dataType: int64
+		formatString: 0
+		lineageTag: a0ca2d5f-83c7-4895-8628-b46e3fff431a
+		summarizeBy: sum
+		sourceColumn: outcome_count
+
+		annotation SummarizationSetBy = Automatic
+
+	column passed_count
+		dataType: int64
+		formatString: 0
+		lineageTag: 4f7b6c9c-54e1-44fa-9772-052dedeee1dd
+		summarizeBy: sum
+		sourceColumn: passed_count
+
+		annotation SummarizationSetBy = Automatic
+
+	column flaky_count
+		dataType: int64
+		formatString: 0
+		lineageTag: b31634ed-a07c-442e-9576-551ad569b8c6
+		summarizeBy: sum
+		sourceColumn: flaky_count
+
+		annotation SummarizationSetBy = Automatic
+
+	column failed_count
+		dataType: int64
+		formatString: 0
+		lineageTag: 3dcbdde0-6de2-4efe-adee-e2e2e3f9a621
+		summarizeBy: sum
+		sourceColumn: failed_count
+
+		annotation SummarizationSetBy = Automatic
+
+	column skipped_count
+		dataType: int64
+		formatString: 0
+		lineageTag: 15c5e277-e4f5-473a-9246-c37cae767729
+		summarizeBy: sum
+		sourceColumn: skipped_count
+
+		annotation SummarizationSetBy = Automatic
+
+	column retry_count
+		dataType: double
+		lineageTag: 348e2b38-3411-409f-a804-27cb82701185
+		summarizeBy: sum
+		sourceColumn: retry_count
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column flake_rate
+		dataType: double
+		lineageTag: b35b7710-c0c5-47ad-917a-e6357be21d26
+		summarizeBy: sum
+		sourceColumn: flake_rate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column failure_rate
+		dataType: double
+		lineageTag: adc3efab-e77f-40a8-b0af-f9c70c067a0e
+		summarizeBy: sum
+		sourceColumn: failure_rate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column p50_duration_ms
+		dataType: double
+		lineageTag: 0237ab46-f493-497e-8aa1-90375171bcb3
+		summarizeBy: sum
+		sourceColumn: p50_duration_ms
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column p95_duration_ms
+		dataType: double
+		lineageTag: 7e38ec45-be94-4f31-b94d-6729d228d658
+		summarizeBy: sum
+		sourceColumn: p95_duration_ms
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition rpt_test_stability = m
+		mode: import
+		source =
+				let
+				    Source = Odbc.DataSource("dsn=test_analytics", [HierarchicalNavigation=true]),
+				    dev_Database = Source{[Name="dev",Kind="Database"]}[Data],
+				    main_Schema = dev_Database{[Name="main",Kind="Schema"]}[Data],
+				    rpt_test_stability_Table = main_Schema{[Name="rpt_test_stability",Kind="Table"]}[Data]
+				in
+				    rpt_test_stability_Table
+
+	annotation PBI_ResultType = Table
+

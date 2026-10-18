@@ -1,0 +1,252 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "9c638fc6ca22061450e2",
+  "position": {
+    "x": 0,
+    "y": 306.94421315570355,
+    "z": 2000,
+    "height": 773.86421832106851,
+    "width": 572.60282820826319,
+    "tabOrder": 2000
+  },
+  "visual": {
+    "visualType": "cardVisual",
+    "query": {
+      "queryState": {
+        "Data": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_test_outcome"
+                    }
+                  },
+                  "Property": "Passed"
+                }
+              },
+              "queryRef": "fct_test_outcome.Passed",
+              "nativeQueryRef": "Passed"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_test_outcome"
+                    }
+                  },
+                  "Property": "Flaky"
+                }
+              },
+              "queryRef": "fct_test_outcome.Flaky",
+              "nativeQueryRef": "Flaky"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_test_outcome"
+                    }
+                  },
+                  "Property": "Failed"
+                }
+              },
+              "queryRef": "fct_test_outcome.Failed",
+              "nativeQueryRef": "Failed"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_test_outcome"
+                    }
+                  },
+                  "Property": "Real failures"
+                }
+              },
+              "queryRef": "fct_test_outcome.Real failures",
+              "nativeQueryRef": "Real failures"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fct_test_outcome"
+                  }
+                },
+                "Property": "Passed"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "objects": {
+      "value": [
+        {
+          "properties": {
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "fct_test_outcome"
+                        }
+                      },
+                      "Property": "Real failures color"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "dataViewWildcard": {
+                  "matchingOption": 0
+                }
+              }
+            ],
+            "metadata": "fct_test_outcome.Real failures"
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "3641f9dc35f775ca8188",
+        "ordinal": 0,
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "fct_test_outcome"
+              }
+            },
+            "Property": "Passed"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "a5534128eb6046014e32",
+        "ordinal": 1,
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "fct_test_outcome"
+              }
+            },
+            "Property": "Flaky"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "0f23e0d728d97e45ed9a",
+        "ordinal": 2,
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "fct_test_outcome"
+              }
+            },
+            "Property": "Failed"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "8078aaa6ed51100d00de",
+        "ordinal": 3,
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "fct_test_outcome"
+              }
+            },
+            "Property": "Real failures"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "b1e2a0c4d5f6a7b8c9d2",
+        "ordinal": 4,
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_run"
+              }
+            },
+            "Property": "Is latest"
+          }
+        },
+        "type": "Categorical",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "d",
+              "Entity": "dim_run",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "In": {
+                  "Expressions": [
+                    {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Source": "d"
+                          }
+                        },
+                        "Property": "Is latest"
+                      }
+                    }
+                  ],
+                  "Values": [
+                    [
+                      {
+                        "Literal": {
+                          "Value": "true"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "howCreated": "User"
+      }
+    ],
+    "filterSortOrder": "Custom"
+  }
+}

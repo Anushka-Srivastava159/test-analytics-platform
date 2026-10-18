@@ -1,0 +1,183 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "3d17d3240618baef7a7d",
+  "position": {
+    "x": 583.94149807377335,
+    "y": 0,
+    "z": 3000,
+    "height": 510.24014394795728,
+    "width": 1335.1283766638214,
+    "tabOrder": 3000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_run"
+                    }
+                  },
+                  "Property": "started_at"
+                }
+              },
+              "queryRef": "dim_run.started_at",
+              "nativeQueryRef": "Run",
+              "displayName": "Run"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_test"
+                    }
+                  },
+                  "Property": "test_title"
+                }
+              },
+              "queryRef": "dim_test.test_title",
+              "nativeQueryRef": "test_title"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_test_outcome"
+                    }
+                  },
+                  "Property": "project_name"
+                }
+              },
+              "queryRef": "fct_test_outcome.project_name",
+              "nativeQueryRef": "project_name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_test_outcome"
+                    }
+                  },
+                  "Property": "outcome"
+                }
+              },
+              "queryRef": "fct_test_outcome.outcome",
+              "nativeQueryRef": "outcome"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fct_test_outcome"
+                    }
+                  },
+                  "Property": "first_error_message"
+                }
+              },
+              "queryRef": "fct_test_outcome.first_error_message",
+              "nativeQueryRef": "first_error_message"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "dim_run"
+                  }
+                },
+                "Property": "started_at"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ]
+      }
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "f7ecd0bc54e8f753dfc8",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "fct_test_outcome"
+              }
+            },
+            "Property": "outcome"
+          }
+        },
+        "type": "Advanced",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "f",
+              "Entity": "fct_test_outcome",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "Not": {
+                  "Expression": {
+                    "Comparison": {
+                      "ComparisonKind": 0,
+                      "Left": {
+                        "Column": {
+                          "Expression": {
+                            "SourceRef": {
+                              "Source": "f"
+                            }
+                          },
+                          "Property": "outcome"
+                        }
+                      },
+                      "Right": {
+                        "Literal": {
+                          "Value": "'passed'"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "objects": {
+          "general": [
+            {
+              "properties": {
+                "isInvertedSelectionMode": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "true"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

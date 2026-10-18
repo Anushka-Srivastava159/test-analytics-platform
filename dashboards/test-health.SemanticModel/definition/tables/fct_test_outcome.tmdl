@@ -1,0 +1,146 @@
+table fct_test_outcome
+	lineageTag: 07eb2f49-4598-427f-94c9-975c65967d54
+
+	measure Passed = CALCULATE(COUNTROWS(fct_test_outcome), fct_test_outcome[outcome] = "passed")+0
+		formatString: 0
+		lineageTag: cf9d871e-870b-453e-b0dd-b490c76df01b
+
+	measure Flaky = CALCULATE(COUNTROWS(fct_test_outcome), fct_test_outcome[outcome] = "flaky")+0
+		formatString: 0
+		lineageTag: b690dcb1-7ea0-4730-b077-e089b07b2c16
+
+	measure Failed = CALCULATE(COUNTROWS(fct_test_outcome), fct_test_outcome[outcome] = "failed")+0
+		formatString: 0
+		lineageTag: ae0bc844-6f84-4a73-a770-511c45c7def5
+
+	measure 'Real failures' = CALCULATE([Failed], dim_test[is_intentionally_flaky] = FALSE())+0
+		formatString: 0
+		lineageTag: 327bae49-456e-4fdd-b558-57509190fb5b
+
+	measure 'Real failures color' = IF([Real failures] > 0, "#D64545", "#2E9E5B")
+		lineageTag: 8374e2f8-9afd-4413-b191-6683290f93d0
+
+	column outcome_key
+		dataType: string
+		lineageTag: 0f8065c3-9ad3-4881-a4a0-4f6d1d21984e
+		summarizeBy: none
+		sourceColumn: outcome_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column run_key
+		dataType: string
+		lineageTag: 778da6e9-0912-4354-aecd-f1b0868b8c1e
+		summarizeBy: none
+		sourceColumn: run_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column test_id
+		dataType: string
+		lineageTag: 777eecfc-34bc-427c-b6c1-f67571994298
+		summarizeBy: none
+		sourceColumn: test_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column project_name
+		dataType: string
+		lineageTag: 43956c9c-6fdf-44db-b39b-e10caeecb004
+		summarizeBy: none
+		sourceColumn: project_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column attempt_count
+		dataType: int64
+		formatString: 0
+		lineageTag: b0a7bb2c-7f1e-4d3f-a8a6-2aad52b8060b
+		summarizeBy: sum
+		sourceColumn: attempt_count
+
+		annotation SummarizationSetBy = Automatic
+
+	column max_retry
+		dataType: int64
+		formatString: 0
+		lineageTag: 50fa35b9-8694-4e03-aa76-c95b2c18610a
+		summarizeBy: sum
+		sourceColumn: max_retry
+
+		annotation SummarizationSetBy = Automatic
+
+	column final_status
+		dataType: string
+		lineageTag: cbb888f8-90d7-4f8f-bffd-a9432303e901
+		summarizeBy: none
+		sourceColumn: final_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_duration_ms
+		dataType: double
+		lineageTag: 581e832b-d226-40b2-be6d-c5c0d0572cf5
+		summarizeBy: sum
+		sourceColumn: total_duration_ms
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column final_duration_ms
+		dataType: double
+		lineageTag: c92c27f1-633f-4de8-8218-6aa6e28bf193
+		summarizeBy: sum
+		sourceColumn: final_duration_ms
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column started_at
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 90a67ab1-9e40-479e-b5c7-12d223b81d39
+		summarizeBy: none
+		sourceColumn: started_at
+
+		annotation SummarizationSetBy = Automatic
+
+	column playwright_rollup_status
+		dataType: string
+		lineageTag: fc9300dd-12ae-48b6-a089-bc08a9f51d02
+		summarizeBy: none
+		sourceColumn: playwright_rollup_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column first_error_message
+		dataType: string
+		lineageTag: 3e307ac4-9d1a-4939-936d-d976b7307dac
+		summarizeBy: none
+		sourceColumn: first_error_message
+
+		annotation SummarizationSetBy = Automatic
+
+	column outcome
+		dataType: string
+		lineageTag: 4fe5ba46-7b6b-4039-9dbb-cbaa4e6b8ba8
+		summarizeBy: none
+		sourceColumn: outcome
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fct_test_outcome = m
+		mode: import
+		source =
+				let
+				    Source = Odbc.DataSource("dsn=test_analytics", [HierarchicalNavigation=true]),
+				    dev_Database = Source{[Name="dev",Kind="Database"]}[Data],
+				    main_Schema = dev_Database{[Name="main",Kind="Schema"]}[Data],
+				    fct_test_outcome_Table = main_Schema{[Name="fct_test_outcome",Kind="Table"]}[Data]
+				in
+				    fct_test_outcome_Table
+
+	annotation PBI_ResultType = Table
+

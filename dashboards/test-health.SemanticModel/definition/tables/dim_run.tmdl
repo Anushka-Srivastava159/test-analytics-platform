@@ -1,0 +1,178 @@
+table dim_run
+	lineageTag: 6142ef60-fabd-4220-9241-42049a4ba205
+
+	column run_key
+		dataType: string
+		lineageTag: 5a430e47-f975-4884-bedf-8f683c5ea03e
+		summarizeBy: none
+		sourceColumn: run_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column github_run_id
+		dataType: string
+		lineageTag: f43e4cff-9ba7-4e50-86d4-8e51eaeee671
+		summarizeBy: none
+		sourceColumn: github_run_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column has_run_identity
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: d50ebe1f-089a-4562-81c0-1335d228886a
+		summarizeBy: none
+		sourceColumn: has_run_identity
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column run_attempt
+		dataType: int64
+		formatString: 0
+		lineageTag: bbd03c08-e562-415d-9bb1-b888ec78ee5e
+		summarizeBy: sum
+		sourceColumn: run_attempt
+
+		annotation SummarizationSetBy = Automatic
+
+	column commit_sha
+		dataType: string
+		lineageTag: cf621a48-51d2-4719-9858-3415f19f7550
+		summarizeBy: none
+		sourceColumn: commit_sha
+
+		annotation SummarizationSetBy = Automatic
+
+	column branch
+		dataType: string
+		lineageTag: 82eb77fc-42e5-419c-a8ec-a0e283f5a438
+		summarizeBy: none
+		sourceColumn: branch
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_ci
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 6345e743-ff0f-49dd-92a0-0ef7dbe83525
+		summarizeBy: none
+		sourceColumn: is_ci
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column actual_workers
+		dataType: int64
+		formatString: 0
+		lineageTag: dd78801c-1aa0-4b2c-954b-040b5f29e4f2
+		summarizeBy: sum
+		sourceColumn: actual_workers
+
+		annotation SummarizationSetBy = Automatic
+
+	column started_at
+		dataType: dateTime
+		formatString: d MMM HH:mm
+		lineageTag: eaf21294-2f6a-4862-aae5-96ad7d959948
+		summarizeBy: none
+		sourceColumn: started_at
+
+		annotation SummarizationSetBy = Automatic
+
+	column run_date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 20743890-87f1-4b59-b8c8-9812092362cc
+		summarizeBy: none
+		sourceColumn: run_date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column duration_ms
+		dataType: double
+		lineageTag: 769f2dc5-f1af-4156-b5a1-437bda92e929
+		summarizeBy: sum
+		sourceColumn: duration_ms
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column reported_expected
+		dataType: int64
+		formatString: 0
+		lineageTag: a55ec208-976b-42b2-af73-c9d3c4203648
+		summarizeBy: sum
+		sourceColumn: reported_expected
+
+		annotation SummarizationSetBy = Automatic
+
+	column reported_unexpected
+		dataType: int64
+		formatString: 0
+		lineageTag: 946999a1-26b7-443e-a686-aca7bccd763d
+		summarizeBy: sum
+		sourceColumn: reported_unexpected
+
+		annotation SummarizationSetBy = Automatic
+
+	column reported_flaky
+		dataType: int64
+		formatString: 0
+		lineageTag: 4b11db0d-5bef-4cc8-85c2-68558e75545c
+		summarizeBy: sum
+		sourceColumn: reported_flaky
+
+		annotation SummarizationSetBy = Automatic
+
+	column reported_skipped
+		dataType: int64
+		formatString: 0
+		lineageTag: b6051a5d-c886-473a-8901-c96f79ec25eb
+		summarizeBy: sum
+		sourceColumn: reported_skipped
+
+		annotation SummarizationSetBy = Automatic
+
+	column ingested_at
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 6fdb62c7-8ce8-4b72-b8e3-2de2ac8f3add
+		summarizeBy: none
+		sourceColumn: ingested_at
+
+		annotation SummarizationSetBy = Automatic
+
+	column ingest_source
+		dataType: string
+		lineageTag: 8a60018e-1cfb-480c-baf6-59a0be15506a
+		summarizeBy: none
+		sourceColumn: ingest_source
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Is latest' = dim_run[started_at] = MAX(dim_run[started_at])
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 6e02af82-1bbb-44db-92b6-343e68065c78
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_run = m
+		mode: import
+		source =
+				let
+				    Source = Odbc.DataSource("dsn=test_analytics", [HierarchicalNavigation=true]),
+				    dev_Database = Source{[Name="dev",Kind="Database"]}[Data],
+				    main_Schema = dev_Database{[Name="main",Kind="Schema"]}[Data],
+				    dim_run_Table = main_Schema{[Name="dim_run",Kind="Table"]}[Data]
+				in
+				    dim_run_Table
+
+	annotation PBI_ResultType = Table
+

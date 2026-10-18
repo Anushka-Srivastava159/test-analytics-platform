@@ -33,3 +33,8 @@ logs/
 
 # dbt writes a per-user id file into the project
 warehouse/.user.yml
+
+# Power BI project: the definition files are tracked, the local cache and
+# per-user editor state are not (Microsoft's recommended PBIP ignore list)
+**/.pbi/localSettings.json
+**/.pbi/cache.abf

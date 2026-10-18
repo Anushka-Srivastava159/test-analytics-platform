@@ -32,7 +32,8 @@ Phases 1–4 complete (Playwright suite, CI/CD, Docker, Python ETL). Every CI ru
 its own report into the committed DuckDB warehouse, and the runs from before that was
 wired up were backfilled from their artifacts — the warehouse holds a continuous nightly
 history from 5 Aug 2026. Phase 5 (dbt) is complete: staging and mart models with data
-tests, built on every CI run. The BI layer is next, then cloud.
+tests, built on every CI run. Phase 6 (BI) is in progress: the Power BI report in
+`dashboards/` has its first page, *Release readiness*. Cloud comes after.
 
 ## Layout
 
@@ -46,10 +47,10 @@ pipeline/     Python: parse Playwright JSON reports -> DuckDB
 warehouse/    The CI-owned DuckDB file, plus the dbt project
   models/     staging/ (views over the raw tables), marts/ (dims + facts)
   tests/      Singular data tests that reconcile the models with Playwright
-dashboards/   Power BI / Tableau assets + screenshots
+dashboards/   Power BI project (PBIP: report JSON + model TMDL); Tableau to follow
 ```
 
-`dashboards/` is created in its phase.
+Setup, refresh routine and page notes for the report: [dashboards/README.md](dashboards/README.md).
 
 ## Running the tests
 
